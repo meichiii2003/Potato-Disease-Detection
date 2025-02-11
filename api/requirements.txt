@@ -6,3 +6,11 @@ pillow
 tensorflow-serving-api==2.16.1
 matplotlib
 numpy
+
+tensorflow
+streamlit
+requests
+sentence-transformers
+PyMuPDF
+faiss-cpu
+google-generativeai
