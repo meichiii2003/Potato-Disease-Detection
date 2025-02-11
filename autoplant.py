@@ -10,7 +10,7 @@ def load_model():
     model_path = "saved_models/1.keras"
     return tf.keras.models.load_model(model_path)
 
-model = load_model()
+cnn_model = load_model()
 
 # Define class labels based on training dataset
 CLASS_NAMES = ["Healthy", "Early Blight", "Late Blight"]
@@ -250,7 +250,7 @@ if page == "🥔 Disease Detection":
         processed_image = preprocess_image(image)
 
         # Make prediction
-        prediction = model.predict(processed_image)
+        prediction = cnn_model.predict(processed_image)
         predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
         # Display Prediction Results
