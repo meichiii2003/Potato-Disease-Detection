@@ -7,7 +7,7 @@ from PIL import Image
 # Load the trained Keras model
 @st.cache_resource
 def load_model():
-    model_path = "C://Users//meich//OneDrive - Asia Pacific University//Machine Learning and Data Science Project//Potato Disease Classification//saved_models//1.keras"
+    model_path = "saved_models/1.keras"
     return tf.keras.models.load_model(model_path)
 
 model = load_model()
@@ -48,7 +48,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 # Example Usage - Extract Text
-pdf_text = extract_text_from_pdf("C://Users//meich//Downloads//lec11.pdf")
+pdf_text = extract_text_from_pdf("lec11.pdf")
 #print(pdf_text[:1000])  # Print first 1000 characters to verify extraction
 
 # 📌 Function to Chunk Text
