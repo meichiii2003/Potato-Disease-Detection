@@ -1,4 +1,4 @@
-#tensorflow==2.16.1
+tensorflow==2.16.1
 fastapi
 uvicorn
 python-multipart
@@ -6,7 +6,7 @@ pillow
 #tensorflow-serving-api==2.16.1
 matplotlib
 numpy
-tensorflow
+#tensorflow
 streamlit
 requests
 sentence-transformers
