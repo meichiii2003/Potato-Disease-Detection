@@ -124,7 +124,7 @@ else:
     lat, lon = None, None  # Ensure lat/lon exist
 
 # 🌦 Current Weather Section
-if page == "Current Weather":
+if page == "🌦 Current Weather":
     st.subheader("🌦 Weather Information")
     
     if lat and lon:
@@ -150,7 +150,7 @@ if page == "Current Weather":
         st.warning("Unable to retrieve location. Please enter your city manually.")
 
 # 📅 Future Weather Prediction Section
-if page == "Future Prediction":
+if page == "📅 Future Prediction":
     st.subheader("📅 Future Weather Forecast")
 
     if lat and lon:
@@ -229,7 +229,7 @@ if page == "🤖 AI Assistant":
         #st.write("**TatoGuardAI:**", response.text)
         
 # 🥔 Potato Disease Detection Section
-if page == "Disease Detection":
+if page == "🥔 Disease Detection":
     st.title("🥔 Potato Leaf Disease Detection")
     st.write("Upload an image of a potato leaf to detect disease!")
 
