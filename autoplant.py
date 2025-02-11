@@ -105,12 +105,13 @@ response = client.models.generate_content(
 
 
 
-
-
-
-# Streamlit Sidebar Navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Current Weather", "Future Prediction", "Disease Detection", "🤖 AI Assistant"])
+st.sidebar.title("📍 Navigation")
+page = st.sidebar.radio("Go to", [
+    "🥔 Disease Detection", 
+    "🤖 AI Assistant",
+    "🌦 Current Weather", 
+    "📅 Future Prediction"
+])
 
 # 📌 Get Location for Weather API
 geo_response = requests.get(geo_url).json()
