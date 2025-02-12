@@ -60,7 +60,7 @@ query_params = st.query_params
 if query_params:
     location = query_params.get("")
     if location:
-        lat, lon = map(float,location.split(","))
+        lat, lon = location.split(",")
         st.session_state["latitude"] = lat
         st.session_state["longitude"] = lon
 
@@ -153,21 +153,12 @@ page = st.sidebar.radio("Go to", [
     "📅 Future Prediction"
 ])
 
-# # 📌 Get Location for Weather API
-# geo_response = requests.get(geo_url).json()
-# if geo_response.get("status") == "success":
-#     city_name = geo_response["city"]
-#     lat = geo_response["lat"]
-#     lon = geo_response["lon"]
-# else:
-#     city_name = st.sidebar.text_input("Enter city name:")
-#     lat, lon = None, None  # Ensure lat/lon exist
-
-# ✅ USE THIS INSTEAD: Get Location from Browser
-if "latitude" in st.session_state and "longitude" in st.session_state:
-    lat = st.session_state["latitude"]
-    lon = st.session_state["longitude"]
-    city_name = "Your Location"  # Since we're using actual lat/lon
+# 📌 Get Location for Weather API
+geo_response = requests.get(geo_url).json()
+if geo_response.get("status") == "success":
+    city_name = geo_response["city"]
+    lat = geo_response["lat"]
+    lon = geo_response["lon"]
 else:
     city_name = st.sidebar.text_input("Enter city name:")
     lat, lon = None, None  # Ensure lat/lon exist
@@ -176,21 +167,12 @@ else:
 if page == "🌦 Current Weather":
     st.subheader("🌦 Weather Information")
     
-    # if lat and lon:
-    #     temp_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}"
-    # Use location from browser (stored in session state)
-    if "latitude" in st.session_state and "longitude" in st.session_state:
-        lat = st.session_state["latitude"]
-        lon = st.session_state["longitude"]
-        city_name = "Your Location"  # Since we're using lat/lon directly
-
-        # Fetch weather data
-        #weather_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
-        weather_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}"
-        response = requests.get(weather_url)
+    if lat and lon:
+        temp_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}"
+        response = requests.get(temp_url)
         weather_data = response.json()
 
-        if weather_data.get("cod") == "200":
+        if weather_data.get("cod") != "404":
             main_data = weather_data["main"]
             current_temperature = main_data["temp"]
             current_humidity = main_data["humidity"]
@@ -211,16 +193,9 @@ if page == "🌦 Current Weather":
 if page == "📅 Future Prediction":
     st.subheader("📅 Future Weather Forecast")
 
-    # if lat and lon:
-    #     temp_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}"
-    #     response = requests.get(temp_url)
-    if "latitude" in st.session_state and "longitude" in st.session_state:
-        lat = st.session_state["latitude"]
-        lon = st.session_state["longitude"]
-
-        # Fetch forecast data
-        forecast_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
-        response = requests.get(forecast_url)
+    if lat and lon:
+        temp_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}"
+        response = requests.get(temp_url)
         forecast_data = response.json()
 
         if forecast_data.get("cod") != "404":
