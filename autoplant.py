@@ -26,9 +26,50 @@ DISEASE_SUGGESTIONS = {
 api_key = "4788fe1bcb4e6ea22f28f3ce7334a943"
 base_url = "http://api.openweathermap.org/data/2.5/weather?"
 forecast_url = "http://api.openweathermap.org/data/2.5/forecast?"
-geo_url = "http://ip-api.com/json/"
+#geo_url = "http://ip-api.com/json/"
 
 
+import streamlit as st
+
+# Initialize session state for city and pop-up control
+if "city" not in st.session_state:
+    st.session_state["city"] = "-"  # Default city if not set
+if "show_popup" not in st.session_state:
+    st.session_state["show_popup"] = True  # Don't show pop-up on load
+
+# Function to show the location pop-up
+def show_location_popup():
+    st.session_state["show_popup"] = True  # Trigger pop-up
+
+# Sidebar: Display current location and button to open pop-up
+with st.sidebar:
+    if st.button("📍 Change Location"):
+        show_location_popup()
+    st.write(f"🌍 **Current Location:** {st.session_state['city']}")
+
+    
+# Show pop-up when triggered
+if st.session_state["show_popup"]:
+    with st.popover("🌍 Enter Your Location"):
+        st.write("Please enter your city name for weather updates:")
+
+        # Store input directly in session state
+        city_name = st.text_input("City Name", value="", key="city_input").strip()
+
+        # Update location when submitted
+        if st.button("Submit"):
+            if city_name:
+                st.session_state["city"] = city_name  # ✅ Save new city
+                st.session_state["show_popup"] = False  # Close pop-up
+                st.rerun()  # Force update UI
+            else:
+                st.warning("⚠️ Please enter a valid city name.")
+
+        # Remove location (reset to default)
+        if st.button("Remove Location"):
+            st.session_state["city"] = "-"
+            st.session_state["show_popup"] = False  # Close pop-up
+            st.rerun()  # Force UI update
 
 
 
@@ -103,6 +144,78 @@ response = client.models.generate_content(
 # Display AI Response
 # print(response.text)
 
+# Use OpenWeather API to get latitude & longitude from the city name
+if st.session_state["city"]:
+    geocode_url = f"http://api.openweathermap.org/geo/1.0/direct?q={st.session_state["city"]}&limit=1&appid={api_key}"
+    geocode_response = requests.get(geocode_url).json()
+    
+    if geocode_response:
+        lat = geocode_response[0]["lat"]
+        lon = geocode_response[0]["lon"]
+    else:
+        lat, lon = None, None
+        st.error("⚠️ Could not retrieve location. Please enter a valid city name.")
+else:
+    lat, lon = None, None
+
+# ✅ Ensure 3-Day Weather Summary exists
+if "three_day_summary" not in st.session_state:
+    st.session_state["three_day_summary"] = {}
+
+# 🌦 Fetch Weather Forecast & Analyze Risks (RUNS AT STARTUP)
+if st.session_state["city"]:
+    temp_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
+    response = requests.get(temp_url)
+    forecast_data = response.json()
+
+    if forecast_data.get("cod") != "404":
+        from datetime import datetime, timezone, timedelta
+        forecast_list = forecast_data["list"]
+        now = datetime.now(timezone.utc)  # Get current UTC time
+
+        # Clear previous summary before updating
+        st.session_state["three_day_summary"] = {}
+
+        for forecast in forecast_list:
+            dt_txt = forecast["dt_txt"]
+            forecast_time = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+            # Convert to local time (Malaysia UTC +8)
+            local_time = forecast_time + timedelta(hours=8)
+            forecast_date = local_time.strftime('%Y-%m-%d')
+
+            if local_time > now:  # Only future forecasts
+                temp = forecast["main"]["temp"]  # Already in Celsius
+                humidity = forecast["main"]["humidity"]
+                wind_speed = forecast["wind"]["speed"]
+                description = forecast["weather"][0]["description"]
+                rain = forecast.get("rain", {}).get("3h", 0)  # Get rain in last 3 hours
+
+                # 🌿 Risk Analysis
+                alert_messages = []
+
+                if temp < 15:
+                    alert_messages.append("⚠️ **Cold Temperature Alert**: Risk of frost damage & slowed growth!")
+                if temp > 32:
+                    alert_messages.append("🔥 **Heat Stress Alert**: Protect plants from excessive sun exposure!")
+
+                if humidity > 80:
+                    alert_messages.append("🌫 **High Humidity Alert**: Increased risk of fungal diseases like blight!")
+
+                if wind_speed < 1.0:
+                    alert_messages.append("💨 **Low Wind Alert**: Stagnant air may promote fungal growth!")
+                if wind_speed > 15:
+                    alert_messages.append("🌪 **Strong Winds Alert**: Risk of plant damage, secure vulnerable crops!")
+
+                if rain > 10:
+                    alert_messages.append("🌧 **Heavy Rain Warning**: Possible waterlogging, ensure good drainage!")
+
+                # 📝 Store alerts in session_state for ALL pages
+                if forecast_date not in st.session_state["three_day_summary"]:
+                    st.session_state["three_day_summary"][forecast_date] = set()  # Use set to avoid duplicates
+                st.session_state["three_day_summary"][forecast_date].update(alert_messages)
+    else:
+        st.error("⚠️ Forecast data not found. Please check your internet connection or API key.")
 
 
 st.sidebar.title("📍 Navigation")
@@ -113,15 +226,18 @@ page = st.sidebar.radio("Go to", [
     "📅 Future Prediction"
 ])
 
+
+
+
 # 📌 Get Location for Weather API
-geo_response = requests.get(geo_url).json()
-if geo_response.get("status") == "success":
-    city_name = geo_response["city"]
-    lat = geo_response["lat"]
-    lon = geo_response["lon"]
-else:
-    city_name = st.sidebar.text_input("Enter city name:")
-    lat, lon = None, None  # Ensure lat/lon exist
+# geo_response = requests.get(geo_url).json()
+# if geo_response.get("status") == "success":
+#     city_name = geo_response["city"]
+#     lat = geo_response["lat"]
+#     lon = geo_response["lon"]
+# else:
+#     city_name = st.sidebar.text_input("Enter city name:")
+#     lat, lon = None, None  # Ensure lat/lon exist
 
 # 🌦 Current Weather Section
 if page == "🌦 Current Weather":
@@ -134,44 +250,113 @@ if page == "🌦 Current Weather":
 
         if weather_data.get("cod") != "404":
             main_data = weather_data["main"]
-            current_temperature = main_data["temp"]
+            current_temperature = main_data["temp"] - 273.15  # Convert to Celsius
             current_humidity = main_data["humidity"]
             wind_speed = weather_data["wind"]["speed"]
             weather_description = weather_data["weather"][0]["description"]
 
-            st.write(f"**City:** {city_name}")
-            st.write(f"🌡 **Temperature:** {current_temperature:.2f} K")
+            st.write(f"**City:** {st.session_state["city"]}")
+            st.write(f"🌡 **Temperature:** {current_temperature:.2f} C")
             st.write(f"💧 **Humidity:** {current_humidity}%")
             st.write(f"💨 **Wind Speed:** {wind_speed} m/s")
             st.write(f"🌥 **Condition:** {weather_description}")
         else:
             st.error("Weather data not found.")
     else:
-        st.warning("Unable to retrieve location. Please enter your city manually.")
+        st.warning("⚠️ Unable to retrieve location. Please update your location at the side bar.")
 
 # 📅 Future Weather Prediction Section
 if page == "📅 Future Prediction":
-    st.subheader("📅 Future Weather Forecast")
+    st.subheader("📅 Future Weather Forecast & Risk Analysis")
+
+    # Define plant risk thresholds
+    plant_risk_factors = {
+        "high_humidity": 80,  # Risk of fungal diseases
+        "low_temp": 15,       # Risk of slowed growth, frost
+        "high_temp": 32,      # Risk of heat stress
+        "low_wind": 1.0,      # Risk of fungal diseases (low air circulation)
+        "heavy_rain": 10,     # High risk of waterlogging
+        "storm_wind": 15      # Risk of plant damage
+    }
 
     if lat and lon:
-        temp_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}"
+        temp_url = f"{forecast_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
         response = requests.get(temp_url)
         forecast_data = response.json()
 
         if forecast_data.get("cod") != "404":
-            forecast_list = forecast_data["list"][:5]  # First 5 timestamps
+            from datetime import datetime, timezone, timedelta
+            forecast_list = forecast_data["list"]
+            now = datetime.now(timezone.utc)  # Get current UTC time
+
+            # Clear previous summary before updating
+            st.session_state["three_day_summary"] = {}
+
             for forecast in forecast_list:
                 dt_txt = forecast["dt_txt"]
-                temp = forecast["main"]["temp"]
-                description = forecast["weather"][0]["description"]
-                st.write(f"📆 **{dt_txt}**")
-                st.write(f"🌡 Temperature: {temp:.2f} K")
-                st.write(f"🌥 Condition: {description}")
-                st.write("---")
+                forecast_time = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+                # Convert to local time (Malaysia UTC +8)
+                local_time = forecast_time + timedelta(hours=8)
+                forecast_date = local_time.strftime('%Y-%m-%d')
+
+                if local_time > now:  # Only future forecasts
+                    temp = forecast["main"]["temp"]  # Already in Celsius
+                    humidity = forecast["main"]["humidity"]
+                    wind_speed = forecast["wind"]["speed"]
+                    description = forecast["weather"][0]["description"]
+                    rain = forecast.get("rain", {}).get("3h", 0)  # Get rain in last 3 hours
+
+                    # 🌿 Risk Analysis
+                    alert_messages = []
+
+                    if temp < plant_risk_factors["low_temp"]:
+                        alert_messages.append("⚠️ **Cold Temperature Alert**: Risk of frost damage & slowed growth!")
+                    if temp > plant_risk_factors["high_temp"]:
+                        alert_messages.append("🔥 **Heat Stress Alert**: Protect plants from excessive sun exposure!")
+
+                    if humidity > plant_risk_factors["high_humidity"]:
+                        alert_messages.append("🌫 **High Humidity Alert**: Increased risk of fungal diseases like blight!")
+
+                    if wind_speed < plant_risk_factors["low_wind"]:
+                        alert_messages.append("💨 **Low Wind Alert**: Stagnant air may promote fungal growth!")
+                    if wind_speed > plant_risk_factors["storm_wind"]:
+                        alert_messages.append("🌪 **Strong Winds Alert**: Risk of plant damage, secure vulnerable crops!")
+
+                    if rain > plant_risk_factors["heavy_rain"]:
+                        alert_messages.append("🌧 **Heavy Rain Warning**: Possible waterlogging, ensure good drainage!")
+
+                    # 📝 Store alerts in session_state for ALL pages
+                    if forecast_date not in st.session_state["three_day_summary"]:
+                        st.session_state["three_day_summary"][forecast_date] = set()  # Use set to avoid duplicates
+                    st.session_state["three_day_summary"][forecast_date].update(alert_messages)
+
+                    # Display Forecast (Only inside Future Prediction Page)
+                    st.markdown(f"### 📆 {local_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                    st.write(f"🌡 **Temperature:** {temp:.2f}°C")
+                    st.write(f"💧 **Humidity:** {humidity}%")
+                    st.write(f"💨 **Wind Speed:** {wind_speed} m/s")
+                    st.write(f"☁️ **Condition:** {description}")
+
+                    # Display Alerts
+                    if alert_messages:
+                        for alert in alert_messages:
+                            st.warning(alert)
+                    else:
+                        st.success("✅ No extreme weather risks detected!")
+
+                    st.write("---")  # Divider for readability
+
+
         else:
-            st.error("Forecast data not found.")
+            st.error("⚠️ Forecast data not found. Please check your internet connection or API key.")
     else:
-        st.warning("Unable to retrieve location. Please enter your city manually.")
+        st.warning("⚠️ Unable to retrieve location. Please update your location in the sidebar.")
+
+
+
+
+
 
 # 📅 AI Assistant Section
 if page == "🤖 AI Assistant":
@@ -266,3 +451,14 @@ if page == "🥔 Disease Detection":
 
 
 st.info("Ensure the uploaded image is clear and properly formatted.")
+
+# ✅ Show Sidebar Summary on **ALL Pages**
+# ✅ Global variable to store 3-day risk summary (Ensures it exists on all pages)
+with st.sidebar.expander("⚠️ 3-Day Weather Risk Summary", expanded=False):
+    if "three_day_summary" in st.session_state and st.session_state["three_day_summary"]:
+        for date, alerts in st.session_state["three_day_summary"].items():
+            st.write(f"📅 **{date}**")
+            for alert in alerts:
+                st.warning(alert)
+    else:
+        st.info("✅ No major weather risks in the next 3 days.")
