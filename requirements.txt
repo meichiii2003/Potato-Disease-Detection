@@ -9,6 +9,8 @@ numpy
 #tensorflow
 streamlit
 requests
+google
+google.genai
 sentence-transformers
 PyMuPDF
 faiss-cpu
