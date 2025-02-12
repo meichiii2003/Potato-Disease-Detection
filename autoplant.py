@@ -60,7 +60,7 @@ query_params = st.query_params
 if query_params:
     location = query_params.get("")
     if location:
-        lat, lon = location.split(",")
+        lat, lon = map(float,location.split(","))
         st.session_state["latitude"] = lat
         st.session_state["longitude"] = lon
 
@@ -185,7 +185,8 @@ if page == "🌦 Current Weather":
         city_name = "Your Location"  # Since we're using lat/lon directly
 
         # Fetch weather data
-        weather_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
+        #weather_url = f"{base_url}appid={api_key}&lat={lat}&lon={lon}&units=metric"
+        weather_url = f"{base_url}lat={lat}&lon={lon}&appid={api_key}&units=metric"
         response = requests.get(weather_url)
         weather_data = response.json()
 
