@@ -163,6 +163,15 @@ page = st.sidebar.radio("Go to", [
 #     city_name = st.sidebar.text_input("Enter city name:")
 #     lat, lon = None, None  # Ensure lat/lon exist
 
+# ✅ USE THIS INSTEAD: Get Location from Browser
+if "latitude" in st.session_state and "longitude" in st.session_state:
+    lat = st.session_state["latitude"]
+    lon = st.session_state["longitude"]
+    city_name = "Your Location"  # Since we're using actual lat/lon
+else:
+    city_name = st.sidebar.text_input("Enter city name:")
+    lat, lon = None, None  # Ensure lat/lon exist
+
 # 🌦 Current Weather Section
 if page == "🌦 Current Weather":
     st.subheader("🌦 Weather Information")
