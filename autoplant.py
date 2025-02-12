@@ -7,7 +7,7 @@ from PIL import Image
 # Load the trained Keras model
 @st.cache_resource
 def load_model():
-    model_path = "saved_models/1.keras"
+    model_path = "saved_models/cnn_model.h5"
     return tf.keras.models.load_model(model_path)
 
 cnn_model = load_model()
