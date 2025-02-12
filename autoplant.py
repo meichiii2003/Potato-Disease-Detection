@@ -153,15 +153,15 @@ page = st.sidebar.radio("Go to", [
     "📅 Future Prediction"
 ])
 
-# 📌 Get Location for Weather API
-geo_response = requests.get(geo_url).json()
-if geo_response.get("status") == "success":
-    city_name = geo_response["city"]
-    lat = geo_response["lat"]
-    lon = geo_response["lon"]
-else:
-    city_name = st.sidebar.text_input("Enter city name:")
-    lat, lon = None, None  # Ensure lat/lon exist
+# # 📌 Get Location for Weather API
+# geo_response = requests.get(geo_url).json()
+# if geo_response.get("status") == "success":
+#     city_name = geo_response["city"]
+#     lat = geo_response["lat"]
+#     lon = geo_response["lon"]
+# else:
+#     city_name = st.sidebar.text_input("Enter city name:")
+#     lat, lon = None, None  # Ensure lat/lon exist
 
 # 🌦 Current Weather Section
 if page == "🌦 Current Weather":
