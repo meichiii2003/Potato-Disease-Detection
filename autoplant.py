@@ -190,7 +190,7 @@ if page == "🌦 Current Weather":
         response = requests.get(weather_url)
         weather_data = response.json()
 
-        if weather_data.get("cod") != "404":
+        if weather_data.get("cod") == 200:
             main_data = weather_data["main"]
             current_temperature = main_data["temp"]
             current_humidity = main_data["humidity"]
@@ -198,7 +198,7 @@ if page == "🌦 Current Weather":
             weather_description = weather_data["weather"][0]["description"]
 
             st.write(f"**City:** {city_name}")
-            st.write(f"🌡 **Temperature:** {current_temperature:.2f} K")
+            st.write(f"🌡 **Temperature:** {current_temperature:.2f}°C")
             st.write(f"💧 **Humidity:** {current_humidity}%")
             st.write(f"💨 **Wind Speed:** {wind_speed} m/s")
             st.write(f"🌥 **Condition:** {weather_description}")
