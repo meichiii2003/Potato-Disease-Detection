@@ -29,6 +29,46 @@ forecast_url = "http://api.openweathermap.org/data/2.5/forecast?"
 geo_url = "http://ip-api.com/json/"
 
 
+import streamlit as st
+
+st.title("📍 Get User Location in Streamlit")
+
+# JavaScript to get user location from the browser
+get_location = """
+<script>
+function sendLocation(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    document.getElementById("location").innerText = `Latitude: ${lat}, Longitude: ${lon}`;
+
+    // Send location to Streamlit via URL fragment
+    window.location.hash = `#${lat},${lon}`;
+}
+
+// Request user location
+navigator.geolocation.getCurrentPosition(sendLocation);
+</script>
+
+<div id="location">Fetching location...</div>
+"""
+
+# Display JavaScript inside Streamlit
+st.components.v1.html(get_location, height=50)
+
+# Extract location from URL fragment
+query_params = st.query_params
+if query_params:
+    location = query_params.get("")
+    if location:
+        lat, lon = location.split(",")
+        st.session_state["latitude"] = lat
+        st.session_state["longitude"] = lon
+
+# Show the detected location
+if "latitude" in st.session_state and "longitude" in st.session_state:
+    st.success(f"🌍 Your Location: {st.session_state['latitude']}, {st.session_state['longitude']}")
+else:
+    st.warning("🔹 If location is incorrect, allow location access in your browser.")
 
 
 
