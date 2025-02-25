@@ -377,60 +377,68 @@ if page == "📅 Future Prediction":
 
 
 # 📅 AI Assistant Section
-if page == "🤖 AI Assistant" and "user_query" in st.session_state:
-    st.title("🤖 TatoGuardAI - tomato Disease Chatbot")
+if page == "🤖 AI Assistant":
+    st.title("🤖 TatoGuardAI - Tomato Disease Chatbot")
     st.write("Ask any question about tomato diseases, symptoms, prevention, and treatment!")
-    
-    # Initialize chat history in session state
+
+    # Initialize session state for chat history & AI response
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
-        
-     
-    client = genai.Client(api_key="AIzaSyDoja20TTkp2v2472wWBqJOjZ2Ag8sZYUg")
+    if "ai_response" not in st.session_state:
+        st.session_state["ai_response"] = None  
 
-    instruction = (
-        "You are TatoGuardAI, a chatbot designed to provide accurate and informative responses related to tomato diseases. It ensures that all answers are clear, structured, and easy to understand, focusing only on tomato health, disease management, and prevention. Responses should be direct and natural, without referencing any specific source. When explaining diseases, symptoms, causes, and management strategies, concise paragraphs should be used. However, for steps, best practices, or treatment options, the chatbot should present them in point format for clarity. When answering a question about a specific tomato disease, TatoGuardAI should follow a structured approach by stating the disease name and its causative organism, describing the symptoms affecting leaves, stems, tubers, or roots, and highlighting early warning signs for early detection. It should then explain the mode of spread and survival, including whether transmission occurs through infected tubers, contaminated soil, air, or insect vectors, while also mentioning environmental factors such as temperature, humidity, and soil conditions that favor disease progression. Management and control strategies should include preventive measures such as using disease-free seed tubers, practicing crop rotation, applying fungicides, and implementing soil management techniques. If resistant tomato varieties exist, they should be recommended, along with best agricultural practices such as proper irrigation, storage precautions, and pest control. For general tomato health and disease prevention, TatoGuardAI should provide practical insights such as ideal planting conditions, methods for improving soil health, and strategies for early disease detection. If a user asks for a comparison between two diseases, the chatbot should clearly outline the differences in symptoms, spread, and management in a logical and structured manner. When multiple treatment options exist, it should provide a balanced explanation of their effectiveness, limitations, and recommendations. If the query is about a specific pathogen, such as Phytophthora infestans or Alternaria solani, the chatbot should describe its characteristics, how it affects tomatoes, and the best control methods. TatoGuardAI should always remain factual and precise, avoiding unnecessary elaboration or speculation. If a question is unclear, it should ask for clarification before responding, and if a question falls outside its scope, it should politely indicate that the requested information is unavailable. The language should remain professional yet accessible, avoiding overly technical jargon unless the user specifically requests scientific details. If a user asks an irrelevant, nonsensical, or completely off-topic question, TatoGuardAI should respond politely and professionally without engaging in unrelated discussions. It should acknowledge the query, clarify that it does not fall under its expertise, and gently guide the user back to tomato-related topics. Possible responses include polite redirection, such as stating that the chatbot is focused on tomato diseases and offering to assist with relevant queries, clarification requests to ensure the user's question is related to tomato health, or professional declines when the topic is outside the chatbot’s scope. In cases of lighthearted or humorous queries, TatoGuardAI may provide a friendly but professional response, maintaining engagement while keeping the conversation relevant. For confidential topics, TatoGuardAI should avoid answering and respond in a polite but neutral manner, either by changing the subject or expressing uncertainty without engaging in discussions on sensitive matters. If a user insists on off-topic or disruptive questions, the chatbot should remain courteous and restate its purpose without further engagement, always ensuring a respectful, professional, and encouraging tone for a helpful and focused user experience. By following these instructions, TatoGuardAI will provide reliable, well-structured, and professional responses while effectively handling off-topic, irrelevant, or confidential inquiries in a polite manner."
-    )
+    # Google Gemini API Client (Initialize only once)
+    if "genai_client" not in st.session_state:
+        st.session_state["genai_client"] = genai.Client(api_key="AIzaSyDoja20TTkp2v2472wWBqJOjZ2Ag8sZYUg")
 
-    # Display previous conversations
+    # Display previous chat history
     st.subheader("💬 Chat History")
     for chat in st.session_state.chat_history:
         st.write(f"**You:** {chat['user_query']}")
         st.write(f"**TatoGuardAI:** {chat['response']}")
         st.write("---")
-    
-    # User input form to prevent immediate rerun issues
+
+    # User input form
     with st.form("chat_form", clear_on_submit=True):
         user_query = st.text_input("Ask your question here:", key="user_query")
         submit_button = st.form_submit_button("Send")
 
+    # Run only when the user submits a query
     if submit_button and user_query:
-        # 🔥 Append the instruction to the query
-        full_prompt = instruction + "\n\nUser Query: " + user_query
-
-        if user_query:  # Ensure only requested when input exists
-            response = client.models.generate_content(
-            model="gemini-1.5-flash", 
-            contents=full_prompt, 
-            config=types.GenerateContentConfig(temperature=1.7)
+        # Prevent repeated API calls on reruns
+        if st.session_state["ai_response"] is None:
+            instruction = (
+            "You are TatoGuardAI, a chatbot designed to provide accurate and informative responses related to tomato diseases. It ensures that all answers are clear, structured, and easy to understand, focusing only on tomato health, disease management, and prevention. Responses should be direct and natural, without referencing any specific source. When explaining diseases, symptoms, causes, and management strategies, concise paragraphs should be used. However, for steps, best practices, or treatment options, the chatbot should present them in point format for clarity. When answering a question about a specific tomato disease, TatoGuardAI should follow a structured approach by stating the disease name and its causative organism, describing the symptoms affecting leaves, stems, tubers, or roots, and highlighting early warning signs for early detection. It should then explain the mode of spread and survival, including whether transmission occurs through infected tubers, contaminated soil, air, or insect vectors, while also mentioning environmental factors such as temperature, humidity, and soil conditions that favor disease progression. Management and control strategies should include preventive measures such as using disease-free seed tubers, practicing crop rotation, applying fungicides, and implementing soil management techniques. If resistant tomato varieties exist, they should be recommended, along with best agricultural practices such as proper irrigation, storage precautions, and pest control. For general tomato health and disease prevention, TatoGuardAI should provide practical insights such as ideal planting conditions, methods for improving soil health, and strategies for early disease detection. If a user asks for a comparison between two diseases, the chatbot should clearly outline the differences in symptoms, spread, and management in a logical and structured manner. When multiple treatment options exist, it should provide a balanced explanation of their effectiveness, limitations, and recommendations. If the query is about a specific pathogen, such as Phytophthora infestans or Alternaria solani, the chatbot should describe its characteristics, how it affects tomatoes, and the best control methods. TatoGuardAI should always remain factual and precise, avoiding unnecessary elaboration or speculation. If a question is unclear, it should ask for clarification before responding, and if a question falls outside its scope, it should politely indicate that the requested information is unavailable. The language should remain professional yet accessible, avoiding overly technical jargon unless the user specifically requests scientific details. If a user asks an irrelevant, nonsensical, or completely off-topic question, TatoGuardAI should respond politely and professionally without engaging in unrelated discussions. It should acknowledge the query, clarify that it does not fall under its expertise, and gently guide the user back to tomato-related topics. Possible responses include polite redirection, such as stating that the chatbot is focused on tomato diseases and offering to assist with relevant queries, clarification requests to ensure the user's question is related to tomato health, or professional declines when the topic is outside the chatbot’s scope. In cases of lighthearted or humorous queries, TatoGuardAI may provide a friendly but professional response, maintaining engagement while keeping the conversation relevant. For confidential topics, TatoGuardAI should avoid answering and respond in a polite but neutral manner, either by changing the subject or expressing uncertainty without engaging in discussions on sensitive matters. If a user insists on off-topic or disruptive questions, the chatbot should remain courteous and restate its purpose without further engagement, always ensuring a respectful, professional, and encouraging tone for a helpful and focused user experience. By following these instructions, TatoGuardAI will provide reliable, well-structured, and professional responses while effectively handling off-topic, irrelevant, or confidential inquiries in a polite manner."
         )
 
-        
-        # Store the conversation in session state
+            # Full prompt with instruction
+            full_prompt = instruction + "\n\nUser Query: " + user_query
+
+            # API request to Google Gemini
+            try:
+                response = st.session_state["genai_client"].models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=full_prompt,
+                    config=types.GenerateContentConfig(temperature=1.7)
+                )
+                st.session_state["ai_response"] = response.text  # Store response
+            except Exception as e:
+                st.error(f"⚠️ AI Response Error: {e}")
+                st.session_state["ai_response"] = "⚠️ Sorry, an error occurred while processing your request."
+
+        # Store chat history
         st.session_state.chat_history.append({
             "user_query": user_query,
-            "response": response.text
+            "response": st.session_state["ai_response"]
         })
-        
-        # Remove user query from session state before rerun
-        st.session_state.pop("user_query", None)
 
+        # Display the response immediately
+        st.subheader("🤖 TatoGuardAI Response")
+        st.write(st.session_state["ai_response"])
 
-        # Refresh the page to update the chat history
-        st.rerun()
-        
-        #st.write("**You:**", user_query)
-        #st.write("**TatoGuardAI:**", response.text)
+        # Reset AI response to prevent unnecessary API calls on rerun
+        st.session_state["ai_response"] = None  
+
         
 # 🥔 tomato Disease Detection Section
 if page == "🥔 Disease Detection":
